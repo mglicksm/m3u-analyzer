@@ -27,14 +27,29 @@ function parseM3U8(content) {
         meta = info.substring(commaIndex + 1).trim();
       }
 
-      // Split "Artist - Title"
+      // Split "Artist - Title" with fallback for different hyphen formats or missing artist
       let artist = 'Unknown Artist';
       let title = meta;
 
-      const hyphenIndex = meta.indexOf(' - ');
-      if (hyphenIndex !== -1) {
-        artist = meta.substring(0, hyphenIndex).trim();
-        title = meta.substring(hyphenIndex + 3).trim();
+      // Try " - " first, then " -" or "- "
+      const separators = [' - ', ' – ', ' — ', ' -', '- '];
+      let separatorFound = false;
+
+      for (const sep of separators) {
+        const index = meta.indexOf(sep);
+        if (index !== -1) {
+          artist = meta.substring(0, index).trim() || 'Unknown Artist';
+          title = meta.substring(index + sep.length).trim();
+          separatorFound = true;
+          break;
+        }
+      }
+
+      // If no standard separator, but there is a hyphen
+      if (!separatorFound && meta.includes('-')) {
+        const index = meta.indexOf('-');
+        artist = meta.substring(0, index).trim() || 'Unknown Artist';
+        title = meta.substring(index + 1).trim();
       }
 
       currentTrack = { duration, artist, title };

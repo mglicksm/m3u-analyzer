@@ -11,9 +11,11 @@ function App() {
   const [isDragging, setIsDragging] = useState(false);
 
   const formatDuration = (seconds) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
+    const sVal = parseInt(seconds, 10);
+    if (isNaN(sVal)) return '00:00:00';
+    const h = Math.floor(sVal / 3600);
+    const m = Math.floor((sVal % 3600) / 60);
+    const s = Math.floor(sVal % 60);
     return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
   };
 
@@ -23,6 +25,7 @@ function App() {
       throw new Error(err.message || 'Failed to process playlist');
     }
     const data = await response.json();
+    console.log('Parsed API Response:', data);
     setPlaylistData(data);
     setError(null);
   };
@@ -146,11 +149,11 @@ function App() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
             {[
               { label: 'Total Tracks', value: playlistData.summary.totalTracks },
-              { label: 'Unique Artists', value: playlistData.summary.uniqueArtists },
-              { label: 'Total Duration', value: formatDuration(playlistData.summary.totalDuration) },
+              { label: 'Unique Artists', value: playlistData.summary.totalUniqueArtists },
+              { label: 'Total Duration', value: formatDuration(playlistData.summary.totalDurationSeconds) },
               { label: 'Duplicates', value: playlistData.summary.duplicateCount },
             ].map((card, i) => (
-              <div key={i} style={{ padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', backgroundColor: '#fff', textAlign: 'center', border: '1px solid #eee' }}>
+              <div key={i} style={{ padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', backgroundColor: '#fff', color: '#333', textAlign: 'center', border: '1px solid #eee' }}>
                 <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>{card.label}</div>
                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{card.value}</div>
               </div>
@@ -160,19 +163,19 @@ function App() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
             {/* Top Artists Table */}
             <div>
-              <h3>Top Artists</h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#fff' }}>
+              <h3 style={{ color: '#fff' }}>Top Artists</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#fff', color: '#333', borderRadius: '8px', overflow: 'hidden' }}>
                 <thead>
-                  <tr style={{ borderBottom: '2px solid #eee' }}>
+                  <tr style={{ borderBottom: '2px solid #eee', backgroundColor: '#f8f9fa' }}>
                     <th style={{ textAlign: 'left', padding: '0.8rem' }}>Artist</th>
                     <th style={{ textAlign: 'right', padding: '0.8rem' }}>Tracks</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {playlistData.topArtists.map((artist, i) => (
+                  {playlistData.topArtists.map((item, i) => (
                     <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
-                      <td style={{ padding: '0.8rem' }}>{artist.name}</td>
-                      <td style={{ padding: '0.8rem', textAlign: 'right' }}>{artist.count}</td>
+                      <td style={{ padding: '0.8rem' }}>{item.artist}</td>
+                      <td style={{ padding: '0.8rem', textAlign: 'right' }}>{item.count}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -181,20 +184,20 @@ function App() {
 
             {/* Duplicates Table */}
             <div>
-              <h3>Duplicates Found</h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#fff' }}>
+              <h3 style={{ color: '#fff' }}>Duplicates Found</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#fff', color: '#333', borderRadius: '8px', overflow: 'hidden' }}>
                 <thead>
-                  <tr style={{ borderBottom: '2px solid #eee' }}>
+                  <tr style={{ borderBottom: '2px solid #eee', backgroundColor: '#f8f9fa' }}>
                     <th style={{ textAlign: 'left', padding: '0.8rem' }}>Track</th>
                     <th style={{ textAlign: 'left', padding: '0.8rem' }}>Artist</th>
                   </tr>
                 </thead>
                 <tbody>
                   {playlistData.duplicates.length > 0 ? (
-                    playlistData.duplicates.map((track, i) => (
+                    playlistData.duplicates.map((item, i) => (
                       <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
-                        <td style={{ padding: '0.8rem' }}>{track.title}</td>
-                        <td style={{ padding: '0.8rem' }}>{track.artist}</td>
+                        <td style={{ padding: '0.8rem' }}>{item.duplicate.title}</td>
+                        <td style={{ padding: '0.8rem' }}>{item.duplicate.artist}</td>
                       </tr>
                     ))
                   ) : (
